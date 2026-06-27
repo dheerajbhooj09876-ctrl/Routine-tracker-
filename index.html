@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1F3864">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>21-Day Routine Tracker</title>
+<style>
+  :root{
+    --navy:#1F3864;
+    --blue:#2E75B6;
+    --teal:#0F6E6E;
+    --lightblue:#E8F1FA;
+    --lightteal:#E5F5F3;
+    --ink:#1B2733;
+    --muted:#6B7785;
+    --paper:#FAF9F6;
+    --line:#E2E5E9;
+    --good:#1E8E5A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{max-width:480px;margin:0 auto;padding:18px 16px 40px;}
+
+  header{
+    padding:18px 18px 20px;
+    border-radius:18px;
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    color:#fff;
+    margin-bottom:16px;
+  }
+  header .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-bottom:4px;}
+  header h1{font-size:22px;margin:0 0 6px;font-weight:700;}
+  header .sub{font-size:13px;opacity:.9;}
+
+  .streak{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .streak .pill{
+    flex:1;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .streak .pill .num{font-size:20px;font-weight:800;color:var(--navy);}
+  .streak .pill .lbl{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+
+  .daynav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px 12px;
+    margin-bottom:14px;
+  }
+  .daynav button{
+    width:38px;height:38px;border-radius:10px;border:none;
+    background:var(--lightblue);color:var(--navy);font-size:18px;font-weight:700;
+  }
+  .daynav button:disabled{opacity:.35;}
+  .daynav .label{text-align:center;flex:1;}
+  .daynav .label .day{font-size:16px;font-weight:800;color:var(--navy);}
+  .daynav .label .meta{font-size:12px;color:var(--muted);margin-top:1px;}
+
+  .daypicker{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+    margin-bottom:18px;
+  }
+  .daypicker .d{
+    aspect-ratio:1;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;color:var(--muted);
+    position:relative;
+  }
+  .daypicker .d.done{background:var(--good);color:#fff;border-color:var(--good);}
+  .daypicker .d.active{outline:2px solid var(--navy);outline-offset:1px;}
+  .daypicker .d.sat{background:var(--lightteal);}
+
+  .section-title{
+    font-size:12px;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--muted);margin:18px 4px 8px;font-weight:700;
+  }
+
+  .task{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    transition:background .15s,border-color .15s;
+  }
+  .task.checked{background:var(--lightblue);border-color:#cfe0f2;}
+  .task .box{
+    flex:none;width:26px;height:26px;border-radius:8px;
+    border:2px solid #C9D2DC;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;color:transparent;font-weight:900;
+    margin-top:1px;
+  }
+  .task.checked .box{background:var(--good);border-color:var(--good);color:#fff;}
+  .task .body{flex:1;}
+  .task .time{font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.02em;}
+  .task .name{font-size:14.5px;font-weight:600;color:var(--ink);margin-top:1px;}
+  .task .note{font-size:12px;color:var(--muted);margin-top:2px;}
+  .task .subj{
+    display:inline-block;margin-top:5px;
+    font-size:11px;font-weight:700;color:var(--teal);
+    background:var(--lightteal);border-radius:6px;padding:2px 7px;
+  }
+
+  .footer-note{
+    text-align:center;font-size:12px;color:var(--muted);margin-top:22px;line-height:1.5;
+  }
+  .reset{
+    display:block;margin:18px auto 0;background:none;border:none;
+    color:#B3463E;font-size:12.5px;text-decoration:underline;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="eyebrow">B.Optometry · 4th Semester</div>
+    <h1>21-Day Routine Tracker</h1>
+    <div class="sub" id="headerSub">Loading…</div>
+  </header>
+
+  <div class="streak">
+    <div class="pill"><div class="num" id="streakNum">0</div><div class="lbl">Day streak</div></div>
+    <div class="pill"><div class="num" id="doneNum">0</div><div class="lbl">Days done</div></div>
+    <div class="pill"><div class="num" id="pctNum">0%</div><div class="lbl">Today</div></div>
+  </div>
+
+  <div class="daynav">
+    <button id="prevBtn">‹</button>
+    <div class="label">
+      <div class="day" id="dayLabel">Day 1</div>
+      <div class="meta" id="dayMeta">Sunday</div>
+    </div>
+    <button id="nextBtn">›</button>
+  </div>
+
+  <div class="daypicker" id="dayPicker"></div>
+
+  <div class="section-title" id="listTitle">Today's tasks</div>
+  <div id="taskList"></div>
+
+  <div class="footer-note">Tap a task once you've completed it. Your ticks are saved automatically on this device.</div>
+  <button class="reset" id="resetBtn">Reset all progress</button>
+
+</div>
+
+<script>
+const SUBJECTS = ["Ocular Disease", "Public Health", "Contact Lens", "Binocular Vision (BSV)", "Ophthalmic Optics"];
+function subjFor(dayIdx, blockIdx){ return SUBJECTS[(dayIdx*3+blockIdx) % 5]; }
+const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+function classDayTasks(weekdayIdx){
+  return [
+    { id:"wake", time:"5:00 AM", name:"Wake up, freshen up", note:"Drink water first thing" },
+    { id:"cook", time:"5:15 – 6:15 AM", name:"Cook breakfast & lunch (tiffin)", note:"Full 1 hour" },
+    { id:"breakfast", time:"6:15 – 6:45 AM", name:"Eat breakfast" },
+    { id:"morningstudy", time:"6:45 – 7:25 AM", name:"Revise previous day's notes" },
+    { id:"ready", time:"7:25 – 7:50 AM", name:"Get ready, pack bag" },
+    { id:"college", time:"8:00 AM – 12:30 PM", name:"College classes", note:"Pokhara University" },
+    { id:"nap", time:"1:00 – 2:00 PM", name:"Rest / short nap", note:"Max 30–40 min" },
+    { id:"study1", time:"2:00 – 4:00 PM", name:"Study block 1", subj: subjFor(weekdayIdx,0) },
+    { id:"study2", time:"4:30 – 5:30 PM", name:"Study block 2", subj: subjFor(weekdayIdx,1) },
+    { id:"exercise", time:"5:30 – 6:30 PM", name:"Exercise / walk" },
+    { id:"dinner", time:"6:30 – 7:30 PM", name:"Cook & eat dinner" },
+    { id:"study3", time:"7:30 – 9:00 PM", name:"Study block 3", subj: subjFor(weekdayIdx,2) },
+    { id:"plan", time:"9:30 – 10:00 PM", name:"Plan tomorrow, pack bag" },
+    { id:"sleep", time:"10:00 PM", name:"Sleep by 10 PM" },
+  ];
+}
+function lightDayTasks(){
+  return [
+    { id:"wake", time:"6:30 AM", name:"Wake up, cook breakfast" },
+    { id:"chores", time:"7:30 – 9:30 AM", name:"Laundry / cleaning / grocery" },
+    { id:"deepstudy", time:"9:30 – 12:00 PM", name:"Deep study session", note:"Catch up on weak topics" },
+    { id:"lunch", time:"12:00 – 1:00 PM", name:"Cook & eat lunch" },
+    { id:"rest", time:"1:00 – 3:00 PM", name:"Rest / personal time" },
+    { id:"study", time:"3:00 – 5:00 PM", name:"Study / assignments" },
+    { id:"exercise", time:"5:00 – 6:00 PM", name:"Walk / exercise" },
+    { id:"dinner", time:"6:00 – 9:00 PM", name:"Dinner, free time, plan week" },
+    { id:"sleep", time:"10:00 PM", name:"Sleep" },
+  ];
+}
+
+function tasksForDay(dayNum){
+  const wd = (dayNum - 1) % 7; // 0=Sunday ... 6=Saturday
+  if (wd === 6) return { weekdayIdx: wd, isLight: true, tasks: lightDayTasks() };
+  return { weekdayIdx: wd, isLight: false, tasks: classDayTasks(wd) };
+}
+
+let currentDay = 1;
+let progress = {}; // { "1": {taskId:true,...}, ... }
+
+async function loadProgress(){
+  try{
+    const raw = localStorage.getItem('routine-progress-21');
+    progress = raw ? JSON.parse(raw) : {};
+  }catch(e){ progress = {}; }
+}
+async function saveProgress(){
+  try{ localStorage.setItem('routine-progress-21', JSON.stringify(progress)); }catch(e){}
+}
+async function loadCurrentDay(){
+  try{
+    const raw = localStorage.getItem('routine-current-day');
+    currentDay = raw ? parseInt(raw,10) : 1;
+    if(!currentDay || currentDay<1 || currentDay>21) currentDay = 1;
+  }catch(e){ currentDay = 1; }
+}
+async function saveCurrentDay(){
+  try{ localStorage.setItem('routine-current-day', String(currentDay)); }catch(e){}
+}
+
+function dayProgress(dayNum){
+  return progress[String(dayNum)] || {};
+}
+function isTaskChecked(dayNum, taskId){
+  return !!dayProgress(dayNum)[taskId];
+}
+function toggleTask(dayNum, taskId){
+  const key = String(dayNum);
+  if(!progress[key]) progress[key] = {};
+  progress[key][taskId] = !progress[key][taskId];
+  saveProgress();
+}
+function dayCompletionPct(dayNum, total){
+  const dp = dayProgress(dayNum);
+  const done = Object.values(dp).filter(Boolean).length;
+  return total ? Math.round((done/total)*100) : 0;
+}
+function isDayFullyDone(dayNum, total){
+  const dp = dayProgress(dayNum);
+  const done = Object.values(dp).filter(Boolean).length;
+  return total>0 && done===total;
+}
+
+function computeStreak(){
+  let streak = 0;
+  for(let d=currentDay; d>=1; d--){
+    const {tasks} = tasksForDay(d);
+    if(isDayFullyDone(d, tasks.length)) streak++;
+    else break;
+  }
+  return streak;
+}
+function computeDaysDone(){
+  let count = 0;
+  for(let d=1; d<=21; d++){
+    const {tasks} = tasksForDay(d);
+    if(isDayFullyDone(d, tasks.length)) count++;
+  }
+  return count;
+}
+
+function render(){
+  const {weekdayIdx, isLight, tasks} = tasksForDay(currentDay);
+  document.getElementById('dayLabel').textContent = `Day ${currentDay} of 21`;
+  document.getElementById('dayMeta').textContent = WEEKDAYS[weekdayIdx] + (isLight ? ' · Light day' : ' · Class day');
+  document.getElementById('listTitle').textContent = isLight ? "Today's tasks (light day)" : "Today's tasks";
+  document.getElementById('headerSub').textContent = isLight
+    ? "Saturday — chores, deep study, rest."
+    : `Study rotation: ${subjFor(weekdayIdx,0)} → ${subjFor(weekdayIdx,1)} → ${subjFor(weekdayIdx,2)}`;
+
+  document.getElementById('prevBtn').disabled = currentDay <= 1;
+  document.getElementById('nextBtn').disabled = currentDay >= 21;
+
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+  tasks.forEach(t => {
+    const checked = isTaskChecked(currentDay, t.id);
+    const row = document.createElement('div');
+    row.className = 'task' + (checked ? ' checked' : '');
+    row.innerHTML = `
+      <div class="box">${checked ? '✓' : ''}</div>
+      <div class="body">
+        <div class="time">${t.time}</div>
+        <div class="name">${t.name}</div>
+        ${t.note ? `<div class="note">${t.note}</div>` : ''}
+        ${t.subj ? `<div class="subj">${t.subj}</div>` : ''}
+      </div>`;
+    row.addEventListener('click', () => {
+      toggleTask(currentDay, t.id);
+      render();
+    });
+    list.appendChild(row);
+  });
+
+  // day picker grid (21 cells)
+  const picker = document.getElementById('dayPicker');
+  picker.innerHTML = '';
+  for(let d=1; d<=21; d++){
+    const {tasks: dt, weekdayIdx: wd} = tasksForDay(d);
+    const cell = document.createElement('div');
+    const full = isDayFullyDone(d, dt.length);
+    cell.className = 'd' + (full ? ' done' : '') + (d===currentDay ? ' active' : '') + (wd===6 ? ' sat' : '');
+    cell.textContent = d;
+    cell.addEventListener('click', () => { currentDay = d; saveCurrentDay(); render(); });
+    picker.appendChild(cell);
+  }
+
+  document.getElementById('streakNum').textContent = computeStreak();
+  document.getElementById('doneNum').textContent = computeDaysDone() + '/21';
+  document.getElementById('pctNum').textContent = dayCompletionPct(currentDay, tasks.length) + '%';
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if(currentDay>1){ currentDay--; saveCurrentDay(); render(); }
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if(currentDay<21){ currentDay++; saveCurrentDay(); render(); }
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(confirm('Clear all 21 days of progress? This cannot be undone.')){
+    progress = {};
+    saveProgress();
+    render();
+  }
+});
+
+(async function init(){
+  await loadProgress();
+  await loadCurrentDay();
+  render();
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
